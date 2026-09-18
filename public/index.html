@@ -264,6 +264,22 @@
       <pre id="pingJson" style="margin: 0; background: #090d16; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; color: #94a3b8; overflow-x: auto;">Connecting to /api/health...</pre>
     </div>
 
+    <!-- Live VIT Student OAuth & Airdrop Tester -->
+    <div class="live-status-box" style="border-color: #3b82f6;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="font-weight: 700; color: #60a5fa; font-size: 15px;">🎓 Live VIT Student OAuth & Airdrop Tester</span>
+        <span style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">@vitstudent.ac.in Only</span>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+        <input id="vitEmailInput" type="email" value="vismay.shrouty2025@vitstudent.ac.in" style="flex: 1; min-width: 260px; background: #090d16; border: 1px solid #374151; color: #f3f4f6; padding: 10px 14px; border-radius: 8px; font-size: 14px;" placeholder="name.surname2025@vitstudent.ac.in" />
+        <button onclick="testVitVerify()" style="background: #2563eb; color: #fff; border: none; font-weight: 600; padding: 10px 18px; border-radius: 8px; cursor: pointer;">Verify Identity</button>
+        <button onclick="testGoogleOAuth()" style="background: #10b981; color: #042f2e; border: none; font-weight: 700; padding: 10px 18px; border-radius: 8px; cursor: pointer;">🎁 Sign In & Claim 20 Tokens</button>
+      </div>
+      <div id="authResultBox" style="background: #090d16; border: 1px solid #1f2937; padding: 12px; border-radius: 8px; font-size: 13px; color: #94a3b8;">
+        Type any VIT student email above and click <strong>Verify Identity</strong> or <strong>Sign In & Claim 20 Tokens</strong> to test live OAuth & Airdrop.
+      </div>
+    </div>
+
     <div class="section-title">🚀 Core API & Gateway Endpoints</div>
 
     <div class="cards-grid">
@@ -329,7 +345,7 @@
           <span>Wallet Balance</span>
           <span class="method-tag">GET</span>
         </div>
-        <div class="card-desc">Inspect student wallet balance (available, locked in escrow, and runner staked).</div>
+        <div class="card-desc">Inspect student wallet balance (available, non-cashable airdrop bonus, and cashable).</div>
         <div class="card-url">/api/wallet/balance?userId=usr-rohit</div>
       </a>
 
@@ -354,6 +370,28 @@
         <div class="card-desc">Interactive campus tracking simulator with dark mode map, turn-by-turn HUD & OTPs.</div>
         <div class="card-url">/public/tracking.html</div>
       </a>
+
+      <!-- Card 9 -->
+      <div class="card">
+        <div class="card-icon">🔑</div>
+        <div class="card-title">
+          <span>Google OAuth</span>
+          <span class="method-tag post">POST</span>
+        </div>
+        <div class="card-desc">Validates Google ID Token, restricts to @vitstudent.ac.in, and airdrops 20 bonus tokens.</div>
+        <div class="card-url">/api/auth/google</div>
+      </div>
+
+      <!-- Card 10 -->
+      <div class="card">
+        <div class="card-icon">🏷️</div>
+        <div class="card-title">
+          <span>VIT Email Verifier</span>
+          <span class="method-tag post">POST</span>
+        </div>
+        <div class="card-desc">Parses student name, admission year, and academic standing badge from email.</div>
+        <div class="card-url">/api/auth/vit-verify</div>
+      </div>
     </div>
   </div>
 
@@ -374,6 +412,74 @@
       .catch(err => {
         document.getElementById('pingBadge').innerHTML = `🔴 Offline: ${err.message}`;
       });
+
+    // Test VIT Email Verification
+    function testVitVerify() {
+      const email = document.getElementById('vitEmailInput').value.trim();
+      const box = document.getElementById('authResultBox');
+      box.innerHTML = '<span style="color: #60a5fa;">Verifying VIT email domain...</span>';
+
+      fetch('/api/auth/vit-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+          box.innerHTML = `<span style="color: #f87171; font-weight: 700;">❌ Verification Failed:</span> ${data.error}`;
+        } else {
+          box.innerHTML = `
+            <div style="color: #34d399; font-weight: 700; margin-bottom: 6px;">✓ Official VIT Student Email Verified!</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span style="background: #1e293b; padding: 4px 8px; border-radius: 4px; color: #f1f5f9;">👤 Name: <strong>${data.fullName}</strong></span>
+              <span style="background: #1e293b; padding: 4px 8px; border-radius: 4px; color: #f1f5f9;">📅 Admission: <strong>${data.admissionYear}</strong></span>
+              <span style="background: #064e3b; padding: 4px 8px; border-radius: 4px; color: #6ee7b7;">🎓 Standing: <strong>${data.academicStanding}</strong></span>
+            </div>
+          `;
+        }
+      })
+      .catch(err => {
+        box.innerHTML = `<span style="color: #f87171;">Error: ${err.message}</span>`;
+      });
+    }
+
+    // Test Google OAuth Sign-In & Airdrop
+    function testGoogleOAuth() {
+      const email = document.getElementById('vitEmailInput').value.trim();
+      const box = document.getElementById('authResultBox');
+      box.innerHTML = '<span style="color: #10b981;">Simulating Google OAuth & Welcome Airdrop...</span>';
+
+      fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idToken: 'mock_google_id_token_' + Date.now(),
+          email,
+          name: 'VIT Student'
+        })
+      })
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+          box.innerHTML = `<span style="color: #f87171; font-weight: 700;">❌ OAuth Error:</span> ${data.error}`;
+        } else {
+          box.innerHTML = `
+            <div style="color: #34d399; font-weight: 700; margin-bottom: 6px;">🎉 Google OAuth Sign-In Successful!</div>
+            <div style="margin-bottom: 6px; color: #cbd5e1;">${data.message}</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+              <span style="background: #064e3b; padding: 4px 8px; border-radius: 4px; color: #a7f3d0;">💰 Available: <strong>${data.wallet.availableTokens} Tokens</strong></span>
+              <span style="background: #1e1b4b; padding: 4px 8px; border-radius: 4px; color: #c7d2fe;">🎁 Welcome Airdrop: <strong>${data.wallet.bonusTokens} Tokens (Non-Cashable)</strong></span>
+              <span style="background: #1e293b; padding: 4px 8px; border-radius: 4px; color: #94a3b8;">💳 Cashable: <strong>${data.wallet.cashableTokens} Tokens</strong></span>
+            </div>
+            <div style="font-family: monospace; font-size: 11px; color: #60a5fa;">Auth Token: ${data.token}</div>
+          `;
+        }
+      })
+      .catch(err => {
+        box.innerHTML = `<span style="color: #f87171;">Error: ${err.message}</span>`;
+      });
+    }
   </script>
 </body>
 </html>
